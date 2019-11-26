@@ -182,7 +182,52 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):  
-  data = Venue.query.get(venue_id)
+  response = db.session.query(Venue).all()
+  shows = Show.query.filter_by(venue_id = venue_id)
+  now = datetime.now()
+  upcoming_shows = []
+  past_shows = []
+  data = {}
+
+  for show in shows:
+    # upcoming shows
+    if (show.venue_id == venue_id) & (show.start_time > now):
+      upcoming_shows.append({
+        "artist_id": show.artist_id,
+        "artist_name": show.artists.name,
+        "artist_image_link": show.artists.image_link,
+        "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M:%S")
+      })
+    # past shows
+    elif (show.venue_id == venue_id) & (show.start_time < now):
+      past_shows.append({
+        "artist_id": show.artist_id,
+        "artist_name": show.artists.name,
+        "artist_image_link": show.artists.image_link,
+        "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M:%S")
+      })
+
+  # loop over db response
+  for x in response:
+    if (x.id == venue_id):
+      print('MATCH!')
+      data = {
+        "id": x.id,
+        "name": x.name,
+        "genres": x.genres,
+        "address": x.address,
+        "city": x.city,
+        "state": x.state,
+        "phone": x.phone,
+        "website": x.website,
+        "facebook_link": x.facebook_link,
+        "seeking_talent": x.seeking_talent,
+        "image_link": x.image_link,
+        "past_shows": past_shows,
+        "upcoming_shows": upcoming_shows,
+        "past_shows_count": len(past_shows),
+        "upcoming_shows_count": len(upcoming_shows),
+      }
   return render_template('pages/show_venue.html', venue=data)
 
 
@@ -263,7 +308,53 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-  data = Artist.query.get(artist_id)
+  # data = Artist.query.get(artist_id)
+  response = db.session.query(Artist).all()
+  shows = Show.query.filter_by(artist_id = artist_id)
+  now = datetime.now()
+  upcoming_shows = []
+  past_shows = []
+  data = {}
+
+  for show in shows:
+    # upcoming shows
+    if (show.artist_id == artist_id) & (show.start_time > now):
+      upcoming_shows.append({
+        "artist_id": show.artist_id,
+        "artist_name": show.artists.name,
+        "artist_image_link": show.artists.image_link,
+        "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M:%S")
+      })
+    # past shows
+    elif (show.artist_id == artist_id) & (show.start_time < now):
+      past_shows.append({
+        "artist_id": show.artist_id,
+        "artist_name": show.artists.name,
+        "artist_image_link": show.artists.image_link,
+        "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M:%S")
+      })
+
+  # loop over db response
+  for x in response:
+    if (x.id == artist_id):
+      print('MATCH!')
+      data = {
+        "id": x.id,
+        "name": x.name,
+        "genres": x.genres,
+        "city": x.city,
+        "state": x.state,
+        "phone": x.phone,
+        "website": x.website,
+        "facebook_link": x.facebook_link,
+        "seeking_venue": x.seeking_venue,
+        "seeking_description": x.seeking_description,
+        "image_link": x.image_link,
+        "past_shows": past_shows,
+        "upcoming_shows": upcoming_shows,
+        "past_shows_count": len(past_shows),
+        "upcoming_shows_count": len(upcoming_shows),
+      }
   return render_template('pages/show_artist.html', artist=data)
 
 #  Update
@@ -375,13 +466,20 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  response = Show.query.all()
+  response = db.session.query(Show).all()
+  print(type(response))
+  data = []
 
-  print(response)
-  data = ()
+  for x in response:
+    data.append({
+      "venue_id": x.venue_id,
+      "venue_name": x.venues.name,
+      "artist_id": x.artist_id,
+      "artist_name": x.artists.name,
+      "artist_image_link": x.artists.image_link,
+      "start_time": x.start_time.strftime("%m/%d/%Y, %H:%M:%S")
+    })
+
   return render_template('pages/shows.html', shows=data)
 
 @app.route('/shows/create')
